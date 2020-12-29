@@ -1,16 +1,27 @@
 import PySimpleGUI as sg
+import matplotlib.pyplot as plt
 
-# Very basic form.  Return values as a list
-form = sg.FlexForm('Simple data entry form')  # begin with a blank form
+"""
+    Simultaneous PySimpleGUI Window AND a Matplotlib Interactive Window
+    A number of people have requested the ability to run a normal PySimpleGUI window that
+    launches a MatplotLib window that is interactive with the usual Matplotlib controls.
+    It turns out to be a rather simple thing to do.  The secret is to add parameter block=False to plt.show()
+"""
 
-layout = [
-          [sg.Text('Please enter your Name, Address, Phone')],
-          [sg.Text('Name', size=(15, 1)), sg.InputText('name')],
-          [sg.Text('Address', size=(15, 1)), sg.InputText('address')],
-          [sg.Text('Phone', size=(15, 1)), sg.InputText('phone')],
-          [sg.Submit(), sg.Cancel()]
-         ]
+def draw_plot():
+    plt.plot([0.1, 0.2, 0.5, 0.7])
+    plt.show(block=False)
 
-button, values = form.Layout(layout).Read()
+layout = [[sg.Button('Plot'), sg.Cancel(), sg.Button('Popup')]]
 
-print(button, values[0], values[1], values[2])
+window = sg.Window('Have some Matplotlib....', layout)
+
+while True:
+    event, values = window.read()
+    if event in (sg.WIN_CLOSED, 'Cancel'):
+        break
+    elif event == 'Plot':
+        draw_plot()
+    elif event == 'Popup':
+        sg.popup('Yes, your application is still running')
+window.close()

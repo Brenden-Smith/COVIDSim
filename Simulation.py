@@ -1,5 +1,6 @@
 from AdjacencyList import AdjacencyList
 from ArrayList import ArrayList
+import PySimpleGUI as sg
 import random
 import time
 import matplotlib.pyplot as plt
@@ -152,6 +153,104 @@ class Simulation:
         plt.clf()
         plt.close()
 
+    def simulationGUI(self, days : int):
+        '''
+        Runs the simulation for "days" amount of times
+        '''
+
+        start_time = time.time()
+
+        # Initialize plot lists
+        day = []
+        clean = []
+        infected = []
+        dead = []
+        recovered = []
+
+        # Initialize node count
+        infected_nodes = 0
+        dead_nodes = 0
+        clean_nodes = 0
+        recovered_nodes = 0
+
+        simGUILayout = [
+            [sg.Text(f"DAY: {days + 1}")],
+            [sg.Text(f"CLEAN: {clean_nodes}")],
+            [sg.Text(f"INFECTED: {infected_nodes}")],
+            [sg.Text(f"DEAD: {dead_nodes}")],
+            [sg.Text(f"RECOVERED {recovered_nodes}")],
+            [sg.Button("Next Day")],
+        ]
+
+        simGUI = sg.Window("Running simulation...", simGUILayout)
+
+        # Day repeat
+        for repeat in range(1, days + 1):
+
+            # Initialize node count
+            infected_nodes = 0
+            dead_nodes = 0
+            clean_nodes = 0
+            recovered_nodes = 0
+
+            # Print statistics
+            for i in self.Nodes:
+                if i.state == self.CLEAN: clean_nodes += 1
+                if i.state == self.INFECTED:
+                    infected_nodes += 1
+                elif i.state == self.DEAD:
+                    dead_nodes += 1
+                elif i.state == self.RECOVERED:
+                    recovered_nodes += 1
+
+            simGUI.Refresh()
+            event = simGUI.Read()
+
+            # Plot lists
+            day.append(repeat)
+            clean.append(clean_nodes)
+            infected.append(infected_nodes)
+            dead.append(dead_nodes)
+            recovered.append(recovered_nodes)
+
+            # Run simulation
+            for v in self.Nodes:  # Run through all nodes
+                if v.state == self.INFECTED:  # Check for infection
+                    for w in v.adj:  # Find interaction neighbors self.Graph.covid_out_edges(v.index)
+                        if w.state == self.CLEAN:  # If infected interacts with clean
+                            if random.uniform(0, 1) <= self.TRANSMISSION_RATE:  # Transmission chance
+                                self.Nodes.get(w.index).state = self.INFECTED  # Clean is now infected
+                                self.Nodes.get(
+                                    w.index).recover = self.RECOVERY_DAYS  # Set recovery days to RECOVERY_DAYS
+                    v.recover -= 1  # Subtract recovery day
+                    if v.recover == 0:  # If recovery is over
+                        if random.uniform(0, 1) <= self.FATALITY_RATE:  # Fatality chance
+                            v.state = self.DEAD  # Node is dead
+                        else:
+                            v.state = self.RECOVERED  # Node recovered
+
+        # Create plot
+        # plt.plot(day, clean, 'b')
+        plt.plot(day, infected, 'r')
+        plt.plot(day, dead, 'k')
+        plt.plot(day, recovered, 'g')
+        plt.legend(['Infected', 'Dead', 'Recovered'], loc='upper right')
+
+        plotGUI = sg.Window("Simulation Graph", layout=[[sg.Button("OK")]])
+        while True:
+            event, values = plotGUI.read()
+            plt.show(block=FALSE)
+            if event in (sg.WIN_CLOSED, "OK"):
+                break
+
+        elapsed_time = time.time() - start_time
+
+        # Footer
+        print("=== === === === === === === === === === === === === === ===")
+        print(f"Simulation for {days} days completed in {elapsed_time} seconds")
+
+        plt.clf()
+        plt.close()
 
 
 
